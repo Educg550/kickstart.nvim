@@ -177,6 +177,38 @@ vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'Toggle File Ex
 -- Vert term keymap
 vim.keymap.set('n', '<leader>t', ':vert term<CR>', { desc = 'Open vertical terminal' })
 
+-- Live server keymap
+vim.keymap.set('n', '<leader>ls', '<cmd>LiveServerStart<CR>', { desc = 'Start Live Server' })
+vim.keymap.set('n', '<leader>lS', '<cmd>LiveServerStop<CR>', { desc = 'Stop Live Server' })
+
+-- Harpoon mark file
+vim.keymap.set('n', '<leader>m', function()
+  require('harpoon.mark').add_file()
+  vim.notify('File marked with Harpoon!', vim.log.levels.INFO)
+end, { desc = 'Mark file with Harpoon' })
+
+-- Harpoon quick menu
+vim.keymap.set('n', '<leader>h', function()
+  require('harpoon.ui').toggle_quick_menu()
+end, { desc = 'Toggle Harpoon Quick Menu' })
+
+-- Harpoon quick file navigation
+vim.keymap.set('n', '<leader>1', function()
+  require('harpoon.ui').nav_file(1)
+end, { desc = 'Navigate to Harpoon File 1' })
+
+vim.keymap.set('n', '<leader>2', function()
+  require('harpoon.ui').nav_file(2)
+end, { desc = 'Navigate to Harpoon File 2' })
+
+vim.keymap.set('n', '<leader>3', function()
+  require('harpoon.ui').nav_file(3)
+end, { desc = 'Navigate to Harpoon File 3' })
+
+vim.keymap.set('n', '<leader>4', function()
+  require('harpoon.ui').nav_file(4)
+end, { desc = 'Navigate to Harpoon File 4' })
+
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -246,8 +278,8 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-  'barrett-ruth/live-server.nvim',
   'github/copilot.vim',
+  'MunifTanjim/prettier.nvim',
   {
     'nvim-tree/nvim-tree.lua',
     dependencies = { 'nvim-tree/nvim-web-devicons' }, -- optional, for icons
@@ -256,6 +288,46 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle File Explorer' })
     end,
   },
+  {
+    'barrett-ruth/live-server.nvim',
+    build = 'npm install -g live-server',
+    cmd = { 'LiveServerStart', 'LiveServerStop' },
+    config = true,
+  },
+  {
+    -- PDF Preview using external tools like zathura
+    'mechatroner/rainbow_csv', -- just a dummy if you don't want markdown/pdf syntax help
+    ft = { 'pdf' },
+    init = function()
+      vim.api.nvim_create_autocmd('BufReadCmd', {
+        pattern = '*.pdf',
+        callback = function()
+          local file = vim.fn.expand '%:p'
+          local open_cmd
+
+          if vim.fn.has 'unix' == 1 then
+            open_cmd = 'xdg-open'
+          elseif vim.fn.has 'mac' == 1 then
+            open_cmd = 'open'
+          elseif vim.fn.has 'win32' == 1 then
+            open_cmd = 'start'
+          end
+
+          if open_cmd then
+            vim.fn.jobstart({ open_cmd, file }, { detach = true })
+          else
+            vim.notify('Unsupported OS for opening PDFs', vim.log.levels.ERROR)
+          end
+
+          vim.cmd.bdelete()
+        end,
+      })
+    end,
+  },
+  'm-demare/hlargs.nvim', -- Highlight arguments in function calls
+  'nvim-lua/plenary.nvim', -- Useful Lua functions used by lots of plugins
+  'ThePrimeagen/harpoon', -- Quickly navigate to files in your project
+  'sindrets/diffview.nvim', -- View diffs in a side-by-side manner
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -889,11 +961,12 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
+    -- 'folke/tokyonight.nvim',
+    'polirritmico/monokai-nightasty.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     config = function()
       ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
+      require('monokai-nightasty').setup {
         styles = {
           comments = { italic = false }, -- Disable italics in comments
         },
@@ -902,7 +975,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'monokai-nightasty'
     end,
   },
 
