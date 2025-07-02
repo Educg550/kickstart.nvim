@@ -232,6 +232,29 @@ vim.keymap.set('n', '<leader>T', CreateNewTerm, { desc = 'New vertical terminal'
 vim.keymap.set('n', '<leader>ls', '<cmd>LiveServerStart<CR>', { desc = 'Start Live Server' })
 vim.keymap.set('n', '<leader>lS', '<cmd>LiveServerStop<CR>', { desc = 'Stop Live Server' })
 
+-- Auto open index.html and start live server if applicable
+function AutoStartLiveServer()
+  local cwd = vim.fn.getcwd()
+  local index_path = cwd .. '/index.html'
+  local package_json_path = cwd .. '/package.json'
+
+  -- Check conditions
+  local has_index = vim.fn.filereadable(index_path) == 1
+  local has_package = vim.fn.filereadable(package_json_path) == 1
+
+  if has_index and not has_package then
+    -- Start Live Server
+    vim.cmd 'LiveServerStart'
+  end
+end
+
+-- Run AutoStartLiveServer after VimEnter
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    vim.schedule(AutoStartLiveServer) -- Schedule so NvimTree can load first
+  end,
+})
+
 -- Harpoon mark file
 vim.keymap.set('n', '<leader>m', function()
   require('harpoon.mark').add_file()
