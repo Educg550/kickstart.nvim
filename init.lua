@@ -174,8 +174,59 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- NeoTree keymap
 vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'Toggle File Explorer' })
 
--- Vert term keymap
-vim.keymap.set('n', '<leader>t', ':vert term<CR>', { desc = 'Open vertical terminal' })
+-- Toggle vertical terminal
+local term_bufs = {}
+
+-- Create a new vertical terminal and track its buffer
+function CreateNewTerm()
+  vim.cmd 'vsplit | terminal'
+  local bufnr = vim.api.nvim_get_current_buf()
+  table.insert(term_bufs, bufnr)
+end
+
+-- Toggle visibility of all terminal windows
+function ToggleTerminals()
+  local visible_terms = {}
+  local hidden_terms = {}
+
+  -- Classify terminal buffers
+  for _, bufnr in ipairs(term_bufs) do
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      local is_visible = false
+      for _, win in ipairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_get_buf(win) == bufnr then
+          table.insert(visible_terms, win)
+          is_visible = true
+        end
+      end
+      if not is_visible then
+        table.insert(hidden_terms, bufnr)
+      end
+    end
+  end
+
+  if #visible_terms > 0 then
+    -- Hide visible terminals (close windows, keep buffers)
+    for _, win in ipairs(visible_terms) do
+      vim.api.nvim_win_close(win, true)
+    end
+  elseif #hidden_terms > 0 then
+    -- Show hidden terminals (reuse in vsplit)
+    for _, bufnr in ipairs(hidden_terms) do
+      vim.cmd 'vsplit'
+      vim.api.nvim_win_set_buf(0, bufnr)
+    end
+  else
+    -- No terminals at all: create a new one
+    CreateNewTerm()
+  end
+end
+
+-- <leader>t toggles all terminals (show/hide or open if none)
+vim.keymap.set('n', '<leader>t', ToggleTerminals, { desc = 'Toggle all terminals' })
+
+-- <leader>T creates a new vertical terminal regardless of state
+vim.keymap.set('n', '<leader>T', CreateNewTerm, { desc = 'New vertical terminal' })
 
 -- Live server keymap
 vim.keymap.set('n', '<leader>ls', '<cmd>LiveServerStart<CR>', { desc = 'Start Live Server' })
