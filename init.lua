@@ -232,28 +232,41 @@ vim.keymap.set('n', '<leader>T', CreateNewTerm, { desc = 'New vertical terminal'
 vim.keymap.set('n', '<leader>ls', '<cmd>LiveServerStart<CR>', { desc = 'Start Live Server' })
 vim.keymap.set('n', '<leader>lS', '<cmd>LiveServerStop<CR>', { desc = 'Stop Live Server' })
 
--- Auto open index.html and start live server if applicable
-function AutoStartLiveServer()
-  local cwd = vim.fn.getcwd()
-  local index_path = cwd .. '/index.html'
-  local package_json_path = cwd .. '/package.json'
-
-  -- Check conditions
-  local has_index = vim.fn.filereadable(index_path) == 1
-  local has_package = vim.fn.filereadable(package_json_path) == 1
-
-  if has_index and not has_package then
-    -- Start Live Server
-    vim.cmd 'LiveServerStart'
-  end
-end
-
--- Run AutoStartLiveServer after VimEnter
-vim.api.nvim_create_autocmd('VimEnter', {
-  callback = function()
-    vim.schedule(AutoStartLiveServer) -- Schedule so NvimTree can load first
-  end,
-})
+-- -- Auto open index.html and start live server if applicable
+-- function AutoStartLiveServer()
+--   -- Get args passed to Neovim
+--   local args = vim.v.argv
+--
+--   -- Only run if more than 1 file (argv[1] is "nvim" or path to binary)
+--   if #args == 2 then
+--     local arg_path = args[2]
+--     -- Only continue if the argument is a directory (not a single file)
+--     if vim.fn.isdirectory(arg_path) == 0 then
+--       -- You opened a single file, so skip auto-starting the server
+--       return
+--     end
+--   end
+--
+--   -- Get current working directory
+--   local cwd = vim.fn.getcwd()
+--   local index_path = cwd .. '/index.html'
+--   local package_json_path = cwd .. '/package.json'
+--
+--   -- Check conditions
+--   local has_index = vim.fn.filereadable(index_path) == 1
+--   local has_package = vim.fn.filereadable(package_json_path) == 1
+--
+--   if has_index and not has_package then
+--     vim.cmd 'LiveServerStart'
+--   end
+-- end
+--
+-- -- Run AutoStartLiveServer after VimEnter
+-- vim.api.nvim_create_autocmd('VimEnter', {
+--   callback = function()
+--     vim.schedule(AutoStartLiveServer) -- Schedule so NvimTree can load first
+--   end,
+-- })
 
 -- Harpoon mark file
 vim.keymap.set('n', '<leader>m', function()
@@ -364,7 +377,7 @@ require('lazy').setup({
   },
   {
     'barrett-ruth/live-server.nvim',
-    build = 'npm install -g live-server',
+    -- build = 'npm install -g live-server',
     cmd = { 'LiveServerStart', 'LiveServerStop' },
     config = true,
   },
