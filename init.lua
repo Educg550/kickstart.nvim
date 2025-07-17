@@ -575,34 +575,19 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
-          vimgrep_arguments = {
-            'rg',
-            '--color=never',
-            '--no-heading',
-            '--with-filename',
-            '--line-number',
-            '--column',
-            '--smart-case',
-            '--hidden',
-            '--glob=!**/.git/*',
-            '--glob=!**/node_modules/*',
-            '--glob=!**/dist/*',
+          file_ignore_patterns = {
+            'node_modules',
+            '.git/',
+            'venv/',
+            'dist/',
+            'build/',
+            'target/',
+            '%.lock',
           },
         },
         pickers = {
           find_files = {
-            find_command = {
-              'fd',
-              '--type',
-              'f',
-              '--hidden',
-              '--exclude',
-              '.git',
-              '--exclude',
-              'node_modules',
-              '--exclude',
-              'dist',
-            },
+            hidden = true, -- Optional: include dotfiles but still exclude ignored ones
           },
         },
         extensions = {
