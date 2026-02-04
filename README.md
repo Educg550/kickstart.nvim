@@ -19,6 +19,34 @@ Kickstart.nvim targets *only* the latest
 ['nightly'](https://github.com/neovim/neovim/releases/tag/nightly) of Neovim.
 If you are experiencing issues, please make sure you have the latest versions.
 
+#### Installing the stable version
+
+```bash
+# Download the nvim stable appimage
+wget https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage
+
+# Move into local directory
+mkdir -p ~/Applications
+mv ./nvim-linux-x86_64.appimage ~/Applications
+
+# Create symlink to linux path
+ln -s ~/Applications/nvim-linux-x86_64.appimage /usr/bin/nvim
+```
+
+#### Installing the nightly version
+
+```bash
+# Download the nvim nightly appimage
+wget https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.appimage
+
+# Move into local directory
+mkdir -p ~/Applications
+mv ./nvim-linux-x86_64.appimage ~/Applications
+
+# Create symlink to linux path
+ln -s ~/Applications/nvim-linux-x86_64.appimage /usr/bin/nvim
+```
+
 ### Install External Dependencies
 
 External Requirements:
