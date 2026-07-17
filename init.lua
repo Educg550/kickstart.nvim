@@ -418,92 +418,63 @@ do
   -- This autocommand runs after a plugin is installed or updated and
   --  runs the appropriate build command for that plugin if necessary.
 
--- [[ Configure and install plugins ]]
---
---  To check the current status of your plugins, run
---    :Lazy
---
---  You can press `?` in this menu for help. Use `:q` to close the window
---
---  To update plugins you can run
---    :Lazy update
---
--- NOTE: Here is where you install your plugins.
-require('lazy').setup({
-  -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
-  'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-  'github/copilot.vim',
-  'MunifTanjim/prettier.nvim',
-  {
-    'nvim-tree/nvim-tree.lua',
-    dependencies = { 'nvim-tree/nvim-web-devicons' }, -- optional, for icons
-    config = function()
-      require('nvim-tree').setup()
-      vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle File Explorer' })
+  -- [[ Configure and install plugins ]]
+  --
+  --  Here is where you install your plugins with `vim.pack`.
+  --  `vim.pack.add` takes a list of git URLs; for plugins that need it,
+  --  we call their `setup()` (or set up their behavior) right after.
+  --
+  --  To inspect or update these, see the `vim.pack` intro comments above.
+  local plugin_url = function(repo) return 'https://github.com/' .. repo end
+
+  vim.pack.add {
+    plugin_url 'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+    plugin_url 'github/copilot.vim',
+    plugin_url 'MunifTanjim/prettier.nvim',
+    plugin_url 'nvim-tree/nvim-tree.lua', -- File explorer (icons via mini.icons mock)
+    plugin_url 'barrett-ruth/live-server.nvim',
+    plugin_url 'mechatroner/rainbow_csv', -- placeholder ft plugin; PDF handling below
+    plugin_url 'm-demare/hlargs.nvim', -- Highlight arguments in function calls
+    plugin_url 'nvim-lua/plenary.nvim', -- Useful Lua functions used by lots of plugins
+    plugin_url 'ThePrimeagen/harpoon', -- Quickly navigate to files in your project
+    plugin_url 'sindrets/diffview.nvim', -- View diffs in a side-by-side manner
+  }
+
+  -- nvim-tree file explorer
+  require('nvim-tree').setup()
+  vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle File Explorer' })
+
+  -- live-server (defines :LiveServerStart / :LiveServerStop automatically).
+  -- Configure via `vim.g.live_server` if needed; `setup()` was removed in v0.2.0.
+
+  -- Highlight arguments in function calls
+  require('hlargs').setup()
+
+  -- PDF Preview: open PDFs in an external viewer instead of loading them as text
+  vim.api.nvim_create_autocmd('BufReadCmd', {
+    pattern = '*.pdf',
+    callback = function()
+      local file = vim.fn.expand '%:p'
+      local open_cmd
+
+      if vim.fn.has 'unix' == 1 then
+        open_cmd = 'xdg-open'
+      elseif vim.fn.has 'mac' == 1 then
+        open_cmd = 'open'
+      elseif vim.fn.has 'win32' == 1 then
+        open_cmd = 'start'
+      end
+
+      if open_cmd then
+        vim.fn.jobstart({ open_cmd, file }, { detach = true })
+      else
+        vim.notify('Unsupported OS for opening PDFs', vim.log.levels.ERROR)
+      end
+
+      vim.cmd.bdelete()
     end,
-  },
-  {
-    'barrett-ruth/live-server.nvim',
-    -- build = 'npm install -g live-server',
-    cmd = { 'LiveServerStart', 'LiveServerStop' },
-    config = true,
-  },
-  {
-    -- PDF Preview using external tools like zathura
-    'mechatroner/rainbow_csv', -- just a dummy if you don't want markdown/pdf syntax help
-    ft = { 'pdf' },
-    init = function()
-      vim.api.nvim_create_autocmd('BufReadCmd', {
-        pattern = '*.pdf',
-        callback = function()
-          local file = vim.fn.expand '%:p'
-          local open_cmd
+  })
 
-          if vim.fn.has 'unix' == 1 then
-            open_cmd = 'xdg-open'
-          elseif vim.fn.has 'mac' == 1 then
-            open_cmd = 'open'
-          elseif vim.fn.has 'win32' == 1 then
-            open_cmd = 'start'
-          end
-
-          if open_cmd then
-            vim.fn.jobstart({ open_cmd, file }, { detach = true })
-          else
-            vim.notify('Unsupported OS for opening PDFs', vim.log.levels.ERROR)
-          end
-
-          vim.cmd.bdelete()
-        end,
-      })
-    end,
-  },
-  'm-demare/hlargs.nvim', -- Highlight arguments in function calls
-  'nvim-lua/plenary.nvim', -- Useful Lua functions used by lots of plugins
-  'ThePrimeagen/harpoon', -- Quickly navigate to files in your project
-  'sindrets/diffview.nvim', -- View diffs in a side-by-side manner
-
-  -- NOTE: Plugins can also be added by using a table,
-  -- with the first argument being the link and the following
-  -- keys can be used to configure plugin behavior/loading/etc.
-  --
-  -- Use `opts = {}` to automatically pass options to a plugin's `setup()` function, forcing the plugin to be loaded.
-  --
-
-  -- Alternatively, use `config = function() ... end` for full control over the configuration.
-  -- If you prefer to call `setup` explicitly, use:
-  --    {
-  --        'lewis6991/gitsigns.nvim',
-  --        config = function()
-  --            require('gitsigns').setup({
-  --                -- Your gitsigns configuration here
-  --            })
-  --        end,
-  --    }
-  --
-  -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`.
-  --
   -- See `:help vim.pack-events`
   vim.api.nvim_create_autocmd('PackChanged', {
     callback = function(ev)
@@ -593,18 +564,12 @@ do
   -- change the command under that to load whatever the name of that colorscheme is.
   --
   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-  vim.pack.add { gh 'folke/tokyonight.nvim' }
-  ---@diagnostic disable-next-line: missing-fields
-  require('tokyonight').setup {
-    styles = {
-      comments = { italic = false }, -- Disable italics in comments
-    },
-  }
+  vim.pack.add { gh 'tanvirtin/monokai.nvim' }
+  require('monokai').setup {}
 
   -- Load the colorscheme here.
-  -- Like many other themes, this one has different styles, and you could load
-  -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  vim.cmd.colorscheme 'tokyonight-night'
+  -- monokai.nvim also ships variants such as 'monokai_pro' and 'monokai_soda'.
+  vim.cmd.colorscheme 'monokai'
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
